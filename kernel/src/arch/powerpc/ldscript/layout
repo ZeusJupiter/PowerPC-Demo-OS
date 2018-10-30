@@ -1,0 +1,67 @@
+OUTPUT_FORMAT( elf32-powerpc);
+OUTPUT_ARCH("powerpc")
+ENTRY(_systemReset)
+MEMORY
+{
+  IMG : ORIGIN = (0x00000000) , LENGTH = (4 << 20)
+}
+SECTIONS
+{
+    .text : 
+    {
+       *(.except)
+       *(.text)
+       *(.text.*)
+    } > IMG = 0xdeadbeef
+    _img_text_start = LOADADDR(.text);
+    _text_start = ADDR(.text);
+    .rodata :
+    {
+       . = ALIGN(4);
+       __globalObjFuncs = .;
+       *(SORT(.init_array.*))
+       *(.init_array)
+       *(SORT(.ctors.1*))
+       *(SORT(.ctors.*))
+       *(SORT(.ctors))
+       *(SORT(.ctors.2*))
+       *(SORT(.ctors.3*))
+       LONG(0)
+       *(.rodata)
+       *(.rodata*)
+        . = ALIGN(4);
+    } > IMG = 0xdeadbeef
+    _data_start = .;
+    _img_text_end = _data_start - _text_start + _img_text_start;
+    _img_data_start = _img_text_end;
+    .data : 
+    {
+       *(.data)
+       *(.data.*)
+       *(.data1)
+       *(.sdata)
+       *(.sdata.*)
+       . = ALIGN(4);
+    } > IMG = 0xdeadbeef
+    _data_end = .;
+    _img_data_end = _img_data_start + _data_end - _data_start;
+    _bss_start = .;
+    .bss (NOLOAD) :
+    {
+        *(.sbss)
+        *(.scommon)
+        *(.dynbss)
+        *(.bss)
+        *(.bss.*)
+        *(.gnu.linkonce.b.*)
+        *(COMMON)
+    } > IMG = 0xdeadbeef
+    _bss_end = .;
+    __heap_start = .;
+    .heap (NOLOAD) :
+    {
+        . = ORIGIN(IMG) + LENGTH(IMG) - 16;
+    } > IMG = 0xdeadbeef
+    __heap_end = .;
+    __boot_stack_end = .;
+}
